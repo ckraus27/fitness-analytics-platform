@@ -2,7 +2,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic_settings import BaseSettings
 from sqlalchemy import create_engine
+from models import Base, User
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+from fastapi import Depends
+
 app = FastAPI()
+
+class UserCreate(BaseModel):
+    username: str
+    email: str
 
 class Settings(BaseSettings):
     database_url: str
@@ -12,6 +21,16 @@ class Settings(BaseSettings):
 
 settings = Settings()
 engine = create_engine(settings.database_url)
+
+def get_db():
+    db = Session(engine)
+    try:
+        yield db
+    finally:
+        db.close()
+
+Base.metadata.create_all(engine)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -39,3 +58,11 @@ def dashboard():
         "fat": 0,
         "fat_goal": 70
     }
+
+@app.post("/app/users")
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    new_user = User(username=user.username, email=user.email)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
