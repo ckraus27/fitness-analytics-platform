@@ -13,6 +13,15 @@ class UserCreate(BaseModel):
     username: str
     email: str
 
+class UserUpdate(BaseModel):
+    username: str
+    email: str
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+
 class Settings(BaseSettings):
     database_url: str
 
@@ -79,3 +88,17 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+@app.put("/api/users/{user_id}", response_model=UserResponse)
+def update_user(user_id: int, user:UserUpdate, db: Session=Depends(get_db)):
+    user_to_update = db.query(User).filter(User.id == user_id).first()
+
+    if user_to_update is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user_to_update.username = user.username
+    user_to_update.email = user.email
+
+    db.commit()
+
+    return user_to_update
