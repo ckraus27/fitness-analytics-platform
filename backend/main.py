@@ -68,7 +68,7 @@ def dashboard():
         "fat_goal": 70
     }
 
-@app.post("/app/users")
+@app.post("/api/users")
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     new_user = User(username=user.username, email=user.email)
     db.add(new_user)
@@ -102,3 +102,15 @@ def update_user(user_id: int, user:UserUpdate, db: Session=Depends(get_db)):
     db.commit()
 
     return user_to_update
+
+@app.delete("/api/users/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    user_to_delete = db.query(User).filter(User.id == user_id).first()
+
+    if user_to_delete is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    db.delete(user_to_delete)
+    db.commit()
+
+    return {"message": "User deleted successfully"}
