@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import String
+from sqlalchemy import String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 class Base(DeclarativeBase):
@@ -22,3 +22,11 @@ class Food(Base):
     protein: Mapped[float] = mapped_column(nullable=False)
     carbs: Mapped[float] = mapped_column(nullable=False)
     fat: Mapped[float] = mapped_column(nullable=False)
+
+class FoodEntry(Base):
+    __tablename__ = "food_entries"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    food_id: Mapped[int] = mapped_column(ForeignKey("foods.id"), nullable=False)
+    amount_grams: Mapped[float] = mapped_column(nullable=False)
+
