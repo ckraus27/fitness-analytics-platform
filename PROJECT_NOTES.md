@@ -1,223 +1,255 @@
-# Fitness Analytics Platform --- Project Notes
+# Fitness Analytics Platform — Project Notes
 
 Last updated: September 27, 2026
 
 ## Project overview
 
-A full-stack fitness and nutrition tracking application inspired by
-tools such as Cronometer. The goal is to build a polished, useful
-application that also demonstrates backend, frontend, database, data
-analysis, and eventually machine-learning skills.
+A full-stack fitness and nutrition tracking application inspired by tools such as Cronometer. The goal is to build a polished, useful application that also demonstrates backend, frontend, database, data analysis, and eventually machine-learning skills.
 
 ## Goals
 
--   Track food intake, calories, and macronutrients.
--   Track workouts, exercises, sets, and workout history.
--   Show useful daily summaries and longer-term analytics.
--   Add machine-learning features once the core application is reliable.
--   Build the project incrementally, testing each feature before moving
-    on.
+- Track food intake, calories, and macronutrients.
+- Track workouts, exercises, sets, and workout history.
+- Show useful daily summaries and longer-term analytics.
+- Add machine-learning features once the core application is reliable.
+- Build the project incrementally, testing each feature before moving on.
 
 ## Planned technology stack
 
-  -----------------------------------------------------------------------
-  Area                                Technology
-  ----------------------------------- -----------------------------------
-  Frontend                            React, TypeScript, Tailwind CSS,
-                                      Recharts
-
-  Backend                             Python, FastAPI, SQLAlchemy,
-                                      Pydantic
-
-  Database                            PostgreSQL
-
-  Nutrition data                      USDA FoodData Central API
-
-  Data analysis / ML                  Pandas, NumPy, scikit-learn
-
-  Testing                             pytest
-
-  Development / version control       Git, GitHub, WebStorm
-
-  Deployment (planned)                Vercel for frontend; Render,
-                                      Railway, or AWS for backend
-  -----------------------------------------------------------------------
+| Area | Technology |
+|---|---|
+| Frontend | React, TypeScript, Tailwind CSS, Recharts |
+| Backend | Python, FastAPI, SQLAlchemy, Pydantic |
+| Database | PostgreSQL |
+| Nutrition data | USDA FoodData Central API |
+| Data analysis / ML | Pandas, NumPy, scikit-learn |
+| Testing | pytest |
+| Development / version control | Git, GitHub, WebStorm |
+| Deployment (planned) | Vercel for frontend; Render, Railway, or AWS for backend |
 
 ## Repository and local setup
 
--   GitHub repository: `fitness-analytics-platform`
--   Local project directory:
-    `/Users/ckraus23/Desktop/projects/fitness-analytics-platform`
+- GitHub repository: `fitness-analytics-platform`
+- Local project directory:
+  `/Users/ckraus23/Desktop/projects/fitness-analytics-platform`
 
 Expected top-level structure:
 
-``` text
-fitness-analytics-platform/
-├── backend/
-│   ├── .venv/
-│   ├── main.py
-│   ├── models.py
-│   └── .env
-├── frontend/
-│   ├── src/
-│   │   └── App.tsx
-│   ├── package.json
-│   └── ...
-├── .gitignore
-└── README.md
-```
+    fitness-analytics-platform/
+    ├── backend/
+    │   ├── .venv/
+    │   ├── main.py
+    │   ├── models.py
+    │   └── .env
+    ├── frontend/
+    │   ├── src/
+    │   │   └── App.tsx
+    │   ├── package.json
+    │   └── ...
+    ├── .gitignore
+    └── README.md
 
-Do not commit `.env`, `.venv`, `node_modules`, or other
-secrets/generated files.
+Do not commit `.env`, `.venv`, `node_modules`, or other secrets/generated files.
 
 ## Current implementation
 
 ### Backend
 
--   FastAPI application is in `backend/main.py`.
+- FastAPI application is in `backend/main.py`.
+- Run from the `backend` directory with:
 
--   Run from the `backend` directory with:
+      source .venv/bin/activate
+      uvicorn main:app --reload
 
-    ``` bash
-    source .venv/bin/activate
-    uvicorn main:app --reload
-    ```
-
--   Local API address: `http://127.0.0.1:8000`
-
--   Existing endpoints:
-
-    -   `GET /` --- basic API welcome message.
-    -   `GET /api/health` --- health status.
-    -   `GET /api/dashboard` --- currently returns placeholder nutrition
-        totals and goals.
-    -   `POST /api/users` --- creates a user.
-    -   `GET /api/users` --- returns all users.
-    -   `GET /api/users/{user_id}` --- returns one user or a 404.
-    -   `PUT /api/users/{user_id}` --- updates a user's username and
-        email or returns a 404.
-
--   CORS is configured to allow the Vite development frontend at
-    `http://localhost:5173`.
-
--   Database connection is configured with `pydantic-settings` using a
-    local `.env` file.
-
--   SQLAlchemy is used for database access.
+- Local API address: `http://127.0.0.1:8000`
+- Existing endpoints:
+  - `GET /` — basic API welcome message.
+  - `GET /api/health` — health status.
+  - `GET /api/dashboard` — currently returns placeholder nutrition totals and goals.
+  - `POST /api/users` — creates a user.
+  - `GET /api/users` — returns all users.
+  - `GET /api/users/{user_id}` — returns one user or a 404.
+  - `PUT /api/users/{user_id}` — updates a user's username and email or returns a 404.
+  - `DELETE /api/users/{user_id}` — deletes a user or returns a 404.
+- Basic user CRUD has been implemented and tested, including successful deletion and the user-not-found case.
+- CORS is configured to allow the Vite development frontend at `http://localhost:5173`.
+- Database connection is configured with `pydantic-settings` using a local `.env` file.
+- SQLAlchemy is used for database access.
 
 ### Database
 
--   PostgreSQL is installed through Postgres.app.
--   The application database is named `fitness_analytics`.
--   The database URL is stored in `backend/.env`, not in source control.
--   A `users` table has been created and verified.
--   Current user columns:
-    -   `id`: integer primary key, generated by a PostgreSQL sequence.
-    -   `username`: required, unique, up to 50 characters.
-    -   `email`: required, unique, up to 255 characters.
+- PostgreSQL is installed through Postgres.app.
+- The application database is named `fitness_analytics`.
+- The database URL is stored in `backend/.env`, not in source control.
+- The following tables currently exist and have been verified:
+  - `users`
+  - `foods`
+  - `food_entries`
 
-### SQLAlchemy model
+### `users` table
 
-`backend/models.py` currently defines a declarative `Base` and a `User`
-model. The model maps to the `users` table.
+Current columns:
+
+- `id`: integer primary key, generated by a PostgreSQL sequence.
+- `username`: required, unique, up to 50 characters.
+- `email`: required, unique, up to 255 characters.
+
+### `foods` table
+
+Current columns:
+
+- `id`: integer primary key, generated by a PostgreSQL sequence.
+- `name`: required, up to 255 characters.
+- `calories`: required floating-point value.
+- `protein`: required floating-point value.
+- `carbs`: required floating-point value.
+- `fat`: required floating-point value.
+
+The exact basis for the nutrition values, such as per 100 grams versus per serving, still needs to be finalized before integrating USDA food data.
+
+### `food_entries` table
+
+Current columns:
+
+- `id`: integer primary key, generated by a PostgreSQL sequence.
+- `user_id`: required foreign key referencing `users.id`.
+- `food_id`: required foreign key referencing `foods.id`.
+- `amount_grams`: required floating-point value representing the amount of food consumed.
+
+The `food_entries` table acts as the junction between users and foods. It allows many users to log the same food and allows each user to log many foods.
+
+Current relationships:
+
+    users.id
+       ↑
+       |
+    food_entries.user_id
+
+    foods.id
+       ↑
+       |
+    food_entries.food_id
+
+### SQLAlchemy models
+
+`backend/models.py` currently defines a declarative `Base` and these models:
+
+- `User` — maps to the `users` table.
+- `Food` — maps to the `foods` table.
+- `FoodEntry` — maps to the `food_entries` table.
+
+The `FoodEntry` model contains foreign keys connecting it to both `User` and `Food`.
+
+The project currently uses SQLAlchemy's typed declarative syntax, including `Mapped[]` and `mapped_column()`.
+
+`Base.metadata.create_all(engine)` is currently used to create missing database tables. It does not modify existing tables, so schema changes to existing tables will eventually be handled with Alembic migrations.
 
 ### Pydantic schemas
 
-The backend has these request/response schemas: - `UserCreate`:
-`username`, `email`. - `UserUpdate`: `username`, `email`. -
-`UserResponse`: `id`, `username`, `email`.
+The backend currently has these request/response schemas:
 
-The update endpoint uses `response_model=UserResponse` so FastAPI
-serializes the returned user with the expected fields.
+- `UserCreate`: `username`, `email`.
+- `UserUpdate`: `username`, `email`.
+- `UserResponse`: `id`, `username`, `email`.
+
+The update endpoint uses `response_model=UserResponse` so FastAPI serializes the returned user with the expected fields.
+
+Food and food-entry API schemas have not yet been implemented.
 
 ### Frontend
 
--   Vite + React + TypeScript application is in `frontend/`.
+- Vite + React + TypeScript application is in `frontend/`.
+- Run from the `frontend` directory with:
 
--   Run from the `frontend` directory with:
+      npm run dev
 
-    ``` bash
-    npm run dev
-    ```
-
--   Local development address: `http://localhost:5173`
-
--   `App.tsx` currently fetches the backend health endpoint and
-    placeholder dashboard data.
-
--   The dashboard state is typed with a `Dashboard` TypeScript type and
-    may initially be `null`.
+- Local development address: `http://localhost:5173`
+- `App.tsx` currently fetches the backend health endpoint and placeholder dashboard data.
+- The dashboard state is typed with a `Dashboard` TypeScript type and may initially be `null`.
 
 ## Current development position
 
-The project has completed initial setup and basic user CRUD work through
-updating users. The next planned backend step is to implement
-`DELETE /api/users/{user_id}` and test both successful deletion and the
-not-found case.
+Initial project setup and basic user CRUD are complete and tested.
 
-Before continuing, check the actual working tree and current code
-because this document is a progress snapshot and may become outdated.
+The initial nutrition database structure has also been started and verified:
+
+- `User` model/table exists.
+- `Food` model/table exists.
+- `FoodEntry` model/table exists.
+- `FoodEntry.user_id` references `users.id`.
+- `FoodEntry.food_id` references `foods.id`.
+- The database structure has been manually inspected and verified through PostgreSQL.
+
+The next step is to continue building the nutrition system. The immediate next task is to add information that allows each food entry to record when the food was consumed, followed by building the food-entry API.
+
+Before continuing, check the actual working tree and current code because this document is a progress snapshot and may become outdated.
 
 ## Planned feature roadmap
 
 These are planned features, not all implemented yet.
 
-1.  **Finish basic user CRUD**
-    -   Add and test user deletion.
-2.  **Improve database structure**
-    -   Add the models and relationships needed for nutrition and
-        workout tracking.
-    -   Use migrations (for example, Alembic) as the schema evolves
-        rather than relying indefinitely on `create_all`.
-3.  **Authentication and user-specific data**
-    -   Add secure registration/login and ensure each user's data is
-        isolated.
-4.  **Food and nutrition tracking**
-    -   Search foods using USDA FoodData Central.
-    -   Select a food and serving quantity.
-    -   Record meals/food entries and calculate calories, protein,
-        carbohydrates, and fat.
-    -   Show daily totals against user goals.
-5.  **Workout tracking**
-    -   Record workouts, exercises, sets, reps, and weight.
-    -   View workout history.
-6.  **Analytics and visualizations**
-    -   Add charts for nutrition trends, workout progress, and other
-        useful metrics.
-7.  **Machine-learning features**
-    -   Choose a realistic, well-defined feature after sufficient data
-        and core functionality exist.
-    -   Evaluate it with appropriate metrics and explain its
-        limitations.
-8.  **Quality and deployment**
-    -   Add automated tests, validation, error handling, and
-        documentation.
-    -   Configure deployment and environment variables securely.
+1. **Finish basic user CRUD — COMPLETE**
+   - Create users.
+   - Read users.
+   - Update users.
+   - Delete users.
+   - Test successful and not-found cases.
 
-Possible future database entities include users, foods, food nutrients,
-food entries, meals, recipes, recipe ingredients, exercises, workouts,
-workout exercises, sets, bodyweight records, goals, and daily targets.
+2. **Improve database structure — IN PROGRESS**
+   - Add the models and relationships needed for nutrition and workout tracking.
+   - `User`, `Food`, and `FoodEntry` models have been added.
+   - Add additional fields to food entries as requirements become clearer.
+   - Add workout-related models later.
+   - Use migrations, such as Alembic, as the schema evolves rather than relying indefinitely on `create_all()`.
+
+3. **Authentication and user-specific data**
+   - Add secure registration/login.
+   - Ensure each user's data is isolated.
+   - Add appropriate SQLAlchemy relationships where useful.
+
+4. **Food and nutrition tracking — IN PROGRESS**
+   - Define the nutrition-data format and serving basis.
+   - Search foods using USDA FoodData Central.
+   - Select a food and serving quantity.
+   - Record meals/food entries.
+   - Calculate calories, protein, carbohydrates, and fat based on the amount consumed.
+   - Show daily totals against user goals.
+
+5. **Workout tracking**
+   - Record workouts, exercises, sets, reps, and weight.
+   - View workout history.
+
+6. **Analytics and visualizations**
+   - Add charts for nutrition trends, workout progress, and other useful metrics.
+
+7. **Machine-learning features**
+   - Choose a realistic, well-defined feature after sufficient data and core functionality exist.
+   - Evaluate it with appropriate metrics and explain its limitations.
+
+8. **Quality and deployment**
+   - Add automated tests, validation, error handling, and documentation.
+   - Configure deployment and environment variables securely.
+
+Possible future database entities include users, foods, food nutrients, food entries, meals, recipes, recipe ingredients, exercises, workouts, workout exercises, sets, bodyweight records, goals, and daily targets.
+
 Finalize the schema as requirements become clearer.
 
 ## Working approach
 
--   Work on one small step at a time.
--   Explain unfamiliar code and syntax before asking for changes.
--   Prefer understanding and maintainable code over copying large blocks
-    blindly.
--   Test each endpoint or feature before moving on.
--   Commit and push to GitHub after meaningful, working milestones.
--   Keep this file updated when a feature is completed or a significant
-    decision changes.
--   When resuming in a new conversation, share this file and the
-    relevant current code/error.
+- Work on one small step at a time.
+- Explain unfamiliar code and syntax before asking for changes.
+- Prefer understanding and maintainable code over copying large blocks blindly.
+- Test each endpoint or feature before moving on.
+- Commit and push to GitHub after meaningful, working milestones.
+- Keep this file updated when a feature is completed or a significant decision changes.
+- When resuming in a new conversation, share this file and the relevant current code/error.
 
 ## Important implementation reminders
 
--   Keep secrets and database credentials in `.env`; never commit them.
--   Validate incoming API data with Pydantic schemas.
--   Handle missing database records with appropriate HTTP errors.
--   Do not assume frontend types or API response shapes---keep them in
-    sync.
--   Verify behavior with real API requests and database checks; do not
-    rely only on code appearing correct.
+- Keep secrets and database credentials in `.env`; never commit them.
+- Validate incoming API data with Pydantic schemas.
+- Handle missing database records with appropriate HTTP errors.
+- Do not assume frontend types or API response shapes — keep them in sync.
+- Verify behavior with real API requests and database checks; do not rely only on code appearing correct.
+- Remember that `Base.metadata.create_all(engine)` creates missing tables but does not modify existing tables.
+- Use Alembic migrations once the database schema begins undergoing regular changes.
