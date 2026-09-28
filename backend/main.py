@@ -2,10 +2,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic_settings import BaseSettings
 from sqlalchemy import create_engine
-from models import Base, User
+from models import Base, User, FoodEntry
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from fastapi import Depends
+from datetime import datetime
 
 app = FastAPI()
 
@@ -21,6 +22,12 @@ class UserResponse(BaseModel):
     id: int
     username: str
     email: str
+
+class FoodEntryCreate(BaseModel):
+    user_id: int
+    food_id: int
+    amount_grams: float
+    consumed_at: datetime
 
 class Settings(BaseSettings):
     database_url: str
@@ -114,3 +121,18 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "User deleted successfully"}
+
+@app.post("/api/food-entries")
+def create_food_entry(food_entry: FoodEntryCreate, db: Session=Depends(get_db)):
+    new_food_entry = FoodEntry(
+        user_id=food_entry.user_id,
+        food_id=food_entry.food_id,
+        amount_grams=food_entry.amount_grams,
+        consumed_at=food_entry.consumed_at
+    )
+
+    db.add(new_food_entry)
+    db.commit()
+    db.refresh(new_food_entry)
+
+    return new_food_entry
