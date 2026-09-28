@@ -1,6 +1,6 @@
 # Fitness Analytics Platform — Project Notes
 
-Last updated: September 27, 2026
+Last updated: September 28, 2026
 
 ## Project overview
 
@@ -71,6 +71,9 @@ Do not commit `.env`, `.venv`, `node_modules`, or other secrets/generated files.
   - `GET /api/users/{user_id}` — returns one user or a 404.
   - `PUT /api/users/{user_id}` — updates a user's username and email or returns a 404.
   - `DELETE /api/users/{user_id}` — deletes a user or returns a 404.
+  - `POST /api/food-entries` — creates a food entry.
+  - `GET /api/food-entries` — returns all food entries.
+  - `GET /api/food-entries/{entry_id}` — returns one food entry or a 404.
 - Basic user CRUD has been implemented and tested, including successful deletion and the user-not-found case.
 - CORS is configured to allow the Vite development frontend at `http://localhost:5173`.
 - Database connection is configured with `pydantic-settings` using a local `.env` file.
@@ -115,6 +118,7 @@ Current columns:
 - `user_id`: required foreign key referencing `users.id`.
 - `food_id`: required foreign key referencing `foods.id`.
 - `amount_grams`: required floating-point value representing the amount of food consumed.
+- `consumed_at`: required timestamp representing when the food was consumed.
 
 The `food_entries` table acts as the junction between users and foods. It allows many users to log the same food and allows each user to log many foods.
 
@@ -146,16 +150,20 @@ The project currently uses SQLAlchemy's typed declarative syntax, including `Map
 
 ### Pydantic schemas
 
+### Pydantic schemas
+
 The backend currently has these request/response schemas:
 
 - `UserCreate`: `username`, `email`.
 - `UserUpdate`: `username`, `email`.
 - `UserResponse`: `id`, `username`, `email`.
+- `FoodEntryCreate`: `user_id`, `food_id`, `amount_grams`, `consumed_at`.
 
-The update endpoint uses `response_model=UserResponse` so FastAPI serializes the returned user with the expected fields.
+`UserResponse` is used as the response model for the user update endpoint.
 
-Food and food-entry API schemas have not yet been implemented.
+`FoodEntryCreate` is used to validate incoming JSON when creating a food entry.
 
+The project currently does not have a dedicated `FoodEntryResponse` schema. The food-entry endpoints currently return SQLAlchemy `FoodEntry` objects directly. This can be improved later with an explicit response model so the API schema is documented more clearly in Swagger.
 ### Frontend
 
 - Vite + React + TypeScript application is in `frontend/`.
@@ -171,18 +179,26 @@ Food and food-entry API schemas have not yet been implemented.
 
 Initial project setup and basic user CRUD are complete and tested.
 
-The initial nutrition database structure has also been started and verified:
+The nutrition database structure has been implemented and verified:
 
 - `User` model/table exists.
 - `Food` model/table exists.
 - `FoodEntry` model/table exists.
 - `FoodEntry.user_id` references `users.id`.
 - `FoodEntry.food_id` references `foods.id`.
+- `FoodEntry.amount_grams` records the amount consumed.
+- `FoodEntry.consumed_at` records when the food was consumed.
 - The database structure has been manually inspected and verified through PostgreSQL.
 
-The next step is to continue building the nutrition system. The immediate next task is to add information that allows each food entry to record when the food was consumed, followed by building the food-entry API.
+Food-entry API functionality has now been started and tested:
 
-Before continuing, check the actual working tree and current code because this document is a progress snapshot and may become outdated.
+- `POST /api/food-entries` — creates a food entry.
+- `GET /api/food-entries` — returns all food entries.
+- `GET /api/food-entries/{entry_id}` — returns one food entry or a 404 if it does not exist.
+
+The food-entry creation endpoint has been successfully tested using Swagger with valid foreign-key references.
+
+The next step is to continue building food-entry CRUD, beginning with updating an existing food entry.
 
 ## Planned feature roadmap
 
@@ -196,11 +212,12 @@ These are planned features, not all implemented yet.
    - Test successful and not-found cases.
 
 2. **Improve database structure — IN PROGRESS**
-   - Add the models and relationships needed for nutrition and workout tracking.
-   - `User`, `Food`, and `FoodEntry` models have been added.
-   - Add additional fields to food entries as requirements become clearer.
-   - Add workout-related models later.
-   - Use migrations, such as Alembic, as the schema evolves rather than relying indefinitely on `create_all()`.
+    - Add the models and relationships needed for nutrition and workout tracking.
+    - `User`, `Food`, and `FoodEntry` models have been added.
+    - `FoodEntry` includes `user_id`, `food_id`, `amount_grams`, and `consumed_at`.
+    - Add additional fields to food entries as requirements become clearer.
+    - Add workout-related models later.
+    - Use migrations, such as Alembic, as the schema evolves rather than relying indefinitely on `create_all()`.
 
 3. **Authentication and user-specific data**
    - Add secure registration/login.
@@ -208,12 +225,14 @@ These are planned features, not all implemented yet.
    - Add appropriate SQLAlchemy relationships where useful.
 
 4. **Food and nutrition tracking — IN PROGRESS**
-   - Define the nutrition-data format and serving basis.
-   - Search foods using USDA FoodData Central.
-   - Select a food and serving quantity.
-   - Record meals/food entries.
-   - Calculate calories, protein, carbohydrates, and fat based on the amount consumed.
-   - Show daily totals against user goals.
+    - Define the nutrition-data format and serving basis.
+    - Search foods using USDA FoodData Central.
+    - Select a food and serving quantity.
+    - Record meals/food entries.
+    - Food-entry creation and retrieval endpoints are implemented and tested.
+    - Add food-entry update and delete endpoints.
+    - Calculate calories, protein, carbohydrates, and fat based on the amount consumed.
+    - Show daily totals against user goals.
 
 5. **Workout tracking**
    - Record workouts, exercises, sets, reps, and weight.
