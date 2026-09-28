@@ -136,3 +136,17 @@ def create_food_entry(food_entry: FoodEntryCreate, db: Session=Depends(get_db)):
     db.refresh(new_food_entry)
 
     return new_food_entry
+
+@app.get("/api/food-entries")
+def get_food_entries(db: Session = Depends(get_db)):
+    food_entries = db.query(FoodEntry).all()
+    return food_entries
+
+@app.get("/api/food-entries/{entry_id}")
+def get_food_entry(entry_id: int, db: Session = Depends(get_db)):
+    food_entry = db.query(FoodEntry).filter(FoodEntry.id == entry_id).first()
+
+    if food_entry is None:
+        raise HTTPException(status_code=404, detail="Food entry not found")
+
+    return food_entry
