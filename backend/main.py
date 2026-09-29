@@ -171,3 +171,15 @@ def update_food_entry(
     db.refresh(food_entry_to_update)
 
     return food_entry_to_update
+
+@app.delete("/api/food-entries/{entry_id}")
+def delete_food_entry(entry_id: int, db: Session = Depends(get_db)):
+    food_entry_to_delete = db.query(FoodEntry).filter(FoodEntry.id == entry_id).first()
+
+    if food_entry_to_delete is None:
+        raise HTTPException(status_code=404, detail="Food entry not found")
+
+    db.delete(food_entry_to_delete)
+    db.commit()
+
+    return {"message": "Food entry deleted successfully"}
