@@ -29,6 +29,9 @@ class FoodEntryCreate(BaseModel):
     amount_grams: float
     consumed_at: datetime
 
+class FoodEntryUpdate(BaseModel):
+    amount_grams: float
+
 class Settings(BaseSettings):
     database_url: str
 
@@ -150,3 +153,21 @@ def get_food_entry(entry_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Food entry not found")
 
     return food_entry
+
+@app.put("/api/food-entries/{entry_id}")
+def update_food_entry(
+    entry_id: int,
+    food_entry: FoodEntryUpdate,
+    db: Session = Depends(get_db)
+):
+    food_entry_to_update = db.query(FoodEntry).filter(FoodEntry.id == entry_id).first()
+
+    if food_entry_to_update is None:
+        raise HTTPException(status_code=404, detail="Food entry not found")
+
+    food_entry_to_update.amount_grams = food_entry.amount_grams
+
+    db.commit()
+    db.refresh(food_entry_to_update)
+
+    return food_entry_to_update
